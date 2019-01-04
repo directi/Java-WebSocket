@@ -1,5 +1,8 @@
 package org.java_websocket;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -7,7 +10,9 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 
 public class SocketChannelIOHelper {
 
-	public static boolean read( final ByteBuffer buf, WebSocketImpl ws, ByteChannel channel ) throws IOException {
+    private static final Logger log = LoggerFactory.getLogger(SocketChannelIOHelper.class.getCanonicalName());
+
+    public static boolean read(final ByteBuffer buf, WebSocketImpl ws, ByteChannel channel ) throws IOException {
 		buf.clear();
 		int read = channel.read( buf );
 		buf.flip();
@@ -16,7 +21,8 @@ public class SocketChannelIOHelper {
 			ws.eot();
 			return false;
 		}
-		return read != 0;
+        log.debug("read {} bytes from channel", buf.remaining());
+        return read != 0;
 	}
 
 	/**
@@ -32,6 +38,7 @@ public class SocketChannelIOHelper {
 			ws.eot();
 			return false;
 		}
+        log.debug("read {} bytes from channel", buf.remaining());
 		return channel.isNeedRead();
 	}
 
@@ -72,8 +79,11 @@ public class SocketChannelIOHelper {
 		assert ( channel instanceof WrappedByteChannel == true ? ( (WrappedByteChannel) channel ).isBlocking() : true );
 
 		ByteBuffer buf = ws.outQueue.take();
-		while ( buf.hasRemaining() )
+		while ( buf.hasRemaining() ){
+		    log.debug("writing {} bytes to channel", buf.remaining());
 			channel.write( buf );
+        }
+        log.debug("done writing to channel");
 	}
 
 }
